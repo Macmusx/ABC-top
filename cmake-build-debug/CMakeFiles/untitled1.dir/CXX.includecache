@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/cygdrive/c/Users/Mac/CLionProjects/untitled1/main.cpp
+cstring
+-
+iostream
+-
+cmath
+-
+algorithm
+-
+ctime
+-
+
