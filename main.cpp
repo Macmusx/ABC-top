@@ -47,7 +47,7 @@ double Ackley(double sol[D]);
 double Schwefel(double sol[D]);
 
 /* Functia folosita*/
-FunctionCallback function = &Rosenbrock;
+FunctionCallback function = &Ackley;
 
 /* Functia pentru fitness*/
 double CalculateFitness(double fun)
@@ -173,7 +173,7 @@ void SendOnlookerBees()
     int i, j, t;
     i = 0;
     t = 0;
-    /* Etapa albinelor care aleg calitatea*/
+    /* Etapa albinelor care aleg sursa de mancare*/
     while (t < FoodNumber) {
 
         r = ((double)rand() / ((double)(RAND_MAX) + (double)(1)));
@@ -209,7 +209,6 @@ void SendOnlookerBees()
             ObjValSol = function(solution);
             FitnessSol = CalculateFitness(ObjValSol);
 
-            /*a greedy selection is applied between the current solution i and its mutant*/
             if (FitnessSol > fitness[i]) {
                 /* Daca solutia derivata este mai buna decat cea curenta, noua solutie devine cea derivata si reseteaza counter-ul de imbunatatire*/
                 trial[i] = 0;
