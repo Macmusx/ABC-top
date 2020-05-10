@@ -1,7 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <time.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <ctime>
 
 /* Constante*/
 #define e 2.718281828459045
@@ -15,7 +15,7 @@
 #define maxCycle 3000 /* Nr de cicluri pentru cautarea hranei*/
 
 /* Constante specifice problemei*/
-#define D 50 /* Numar de parametrii care trebuie optimizati*/
+#define D 100 /* Numar de parametrii care trebuie optimizati*/
 #define lb -5.12 /* Limita inferioara */
 #define ub 5.12 /* Limita superioara*/
 
@@ -44,10 +44,11 @@ double Rosenbrock(double sol[D]);
 double Griewank(double sol[D]);
 double Rastrigin(double sol[D]);
 double Ackley(double sol[D]);
-double Schwefel(double sol[D]);
+
+[[maybe_unused]] double Schwefel(double sol[D]);
 
 /* Functia folosita*/
-FunctionCallback function = &Schwefel;
+FunctionCallback function = &Rosenbrock;
 
 /* Functia pentru fitness*/
 double CalculateFitness(double fun)
@@ -248,7 +249,6 @@ int main()
     int iter, run, j;
     double mean;
     mean = 0;
-    srand(time(NULL));
 
     for (run = 0; run < runtime; run++) {
         initial();
