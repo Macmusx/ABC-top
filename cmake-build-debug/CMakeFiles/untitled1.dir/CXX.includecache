@@ -7,14 +7,14 @@
 #IncludeRegexTransform: 
 
 /cygdrive/c/Users/Mac/CLionProjects/untitled1/main.cpp
-cstring
+stdio.h
+-
+stdlib.h
+-
+math.h
+-
+time.h
 -
 iostream
--
-cmath
--
-algorithm
--
-ctime
 -
 
