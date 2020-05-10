@@ -44,8 +44,7 @@ double Rosenbrock(double sol[D]);
 double Griewank(double sol[D]);
 double Rastrigin(double sol[D]);
 double Ackley(double sol[D]);
-
-[[maybe_unused]] double Schwefel(double sol[D]);
+double Schwefel(double sol[D]);
 
 /* Functia folosita*/
 FunctionCallback function = &Rosenbrock;
@@ -174,7 +173,7 @@ void SendOnlookerBees()
     int i, j, t;
     i = 0;
     t = 0;
-    /* Etapa albinelor cautatoare*/
+    /* Etapa albinelor care aleg calitatea*/
     while (t < FoodNumber) {
 
         r = ((double)rand() / ((double)(RAND_MAX) + (double)(1)));
