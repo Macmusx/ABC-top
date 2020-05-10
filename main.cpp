@@ -2,55 +2,54 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
-#include <iostream>
 
-/* Constants*/
+/* Constante*/
 #define e 2.718281828459045
 #define pi 3.141592653589793
 #define alpha 418.982887
 
-/* Control Parameters of ABC algorithm*/
-#define NP 40 /* The number of colony size (employed bees + onlooker bees)*/
-#define FoodNumber NP / 2 /*The number of food sources equals the half of the colony size*/
-#define limit 100 /*A food source which could not be improved through "limit" trials is abandoned by its employed bee*/
-#define maxCycle 3000 /*The number of cycles for foraging {a stopping criteria}*/
+/* Parametrii de control*/
+#define NP 40 /* Dimensiunea coloniei*/
+#define FoodNumber NP / 2 /* Numarul resurselor de mancare = jumatate din dimensiunea coloniei*/
+#define limit 100 /* Limita pentru counter-ul de imbunatatire*/
+#define maxCycle 3000 /* Nr de cicluri pentru cautarea hranei*/
 
-/* Problem specific variables*/
-#define D 50 /*The number of parameters of the problem to be optimized*/
-#define lb -5.12 /*lower bound of the parameters. */
-#define ub 5.12 /*upper bound of the parameters. lb and ub can be defined as arrays for the problems of which parameters have different bounds*/
+/* Constante specifice problemei*/
+#define D 50 /* Numar de parametrii care trebuie optimizati*/
+#define lb -5.12 /* Limita inferioara */
+#define ub 5.12 /* Limita superioara*/
 
-#define runtime 30 /*Algorithm can be run many times in order to see its robustness*/
+#define runtime 30 /* De cate ori e rulat algoritmul*/
 
-double Foods[FoodNumber][D]; /*Foods is the population of food sources. Each row of Foods matrix is a vector holding D parameters to be optimized. The number of rows of Foods matrix equals to the FoodNumber*/
-double f[FoodNumber]; /*f is a vector holding objective function values associated with food sources */
-double fitness[FoodNumber]; /*fitness is a vector holding fitness values associated with food sources*/
-double trial[FoodNumber]; /*trial is a vector holding trial numbers through which solutions can not be improved*/
-double prob[FoodNumber]; /*prob is a vector holding probabilities of food sources (solutions) to be chosen*/
-double solution[D]; /*New solution (neighbour) produced by v_{ij}=x_{ij}+\phi_{ij}*(x_{kj}-x_{ij}) j is a randomly chosen parameter and k is a randomlu chosen solution different from i*/
-double ObjValSol; /*Objective function value of new solution*/
-double FitnessSol; /*Fitness value of new solution*/
-int neighbour, param2change; /*param2change corrresponds to j, neighbour corresponds to k in equation v_{ij}=x_{ij}+\phi_{ij}*(x_{kj}-x_{ij})*/
-double GlobalMin; /*Optimum solution obtained by ABC algorithm*/
-double GlobalParams[D]; /*Parameters of the optimum solution*/
-double GlobalMins[runtime]; /*GlobalMins holds the GlobalMin of each run in multiple runs*/
-double r; /*a random number in the range [0,1)*/
+double Foods[FoodNumber][D]; /* Populatia mancarii*/
+double f[FoodNumber]; /* Tine valoriile functiei mancarii*/
+double fitness[FoodNumber]; /* Tine valorile fitness-ului pentru fiecare mancare*/
+double trial[FoodNumber]; /* Retine valorile unde solutiile nu pot fi imbunatatite (counter-ul de imbunatatire)*/
+double prob[FoodNumber]; /* Contine probabilitatile ca o sursa de mancare sa fie aleasa*/
+double solution[D]; /* Noua solutie produsa v_{ij}=x_{ij}+\phi_{ij}*(x_{ij}-x_{kj}), j - parametru random, k - solutie random, diferita de i*/
+double ObjValSol; /* Valoarea functiei a noii solutii*/
+double FitnessSol; /* Valoarea fitness-ului noii solutii*/
+int neighbour; /* Corespunde k-ului din ecuatia v_{ij}=x_{ij}+\phi_{ij}*(x_{kj}-x_{ij})*/
+int param2change; /* Corespunde lui j*/
+double GlobalMin; /* Optimum*/
+double GlobalParams[D]; /* Parametrii solutiei optium*/
+double GlobalMins[runtime]; /* Tine GlobalMin pentru mai multe run-uri*/
+double r; /* numar random intre [0, 1)*/
 
-/*a function pointer returning double and taking a D-dimensional array as argument */
-/*If your function takes additional arguments then change function pointer definition and lines calling "...=function(solution);" in the code*/
+/* Settup pentru functia folosita*/
 typedef double (*FunctionCallback)(double sol[D]);
 
-/*benchmark functions */
+/* Functii pentru testat*/
 double Rosenbrock(double sol[D]);
 double Griewank(double sol[D]);
 double Rastrigin(double sol[D]);
 double Ackley(double sol[D]);
 double Schwefel(double sol[D]);
 
-/*Write your own objective function name instead of sphere*/
+/* Functia folosita*/
 FunctionCallback function = &Schwefel;
 
-/*Fitness function*/
+/* Functia pentru fitness*/
 double CalculateFitness(double fun)
 {
     double result = 0;
@@ -63,7 +62,7 @@ double CalculateFitness(double fun)
     return result;
 }
 
-/*The best food source is memorized*/
+/* Retine cea mai buna sursa de mancare*/
 void MemorizeBestSource()
 {
     int i, j;
@@ -77,8 +76,7 @@ void MemorizeBestSource()
     }
 }
 
-/*Variables are initialized in the range [lb,ub]. If each parameter has different range, use arrays lb[j], ub[j] instead of lb and ub */
-/* Counters of food sources are also initialized in this function*/
+/* Initializeaza valorile initiale*/
 void init(int index)
 {
     int j;
@@ -92,7 +90,7 @@ void init(int index)
     trial[index] = 0;
 }
 
-/*All food sources are initialized */
+/* Initializeaza sursele de mancare*/
 void initial()
 {
     int i;
@@ -107,18 +105,17 @@ void initial()
 void SendEmployedBees()
 {
     int i, j;
-    /*Employed Bee Phase*/
+    /* Etapa albinelor lucratoare*/
     for (i = 0; i < FoodNumber; i++) {
-        /*The parameter to be changed is determined randomly*/
+        /* Parametrul care trebuie schimbat este ales aleator*/
         r = ((double)rand() / ((double)(RAND_MAX) + (double)(1)));
-        // printf("r = %f",r);
         param2change = (int)(r * D);
 
-        /*A randomly chosen solution is used in producing a mutant solution of the solution i*/
+        /* O solutie aleasa random creaza o solutie derivata a solutiei i*/
         r = ((double)rand() / ((double)(RAND_MAX) + (double)(1)));
         neighbour = (int)(r * FoodNumber);
 
-        /*Randomly selected solution must be different from the solution i*/
+        /* Solutia aleasa random trebuie sa fie diferita de i*/
         while (neighbour == i) {
             r = ((double)rand() / ((double)(RAND_MAX) + (double)(1)));
             neighbour = (int)(r * FoodNumber);
@@ -127,11 +124,11 @@ void SendEmployedBees()
             solution[j] = Foods[i][j];
         }
 
-        /*v_{ij}=x_{ij}+\phi_{ij}*(x_{ij}-x_{kj}) */
+        /* v_{ij}=x_{ij}+\phi_{ij}*(x_{ij}-x_{kj})*/
         r = ((double)rand() / ((double)(RAND_MAX) + (double)(1)));
         solution[param2change] = Foods[i][param2change] + (Foods[i][param2change] - Foods[neighbour][param2change]) * (r - 0.5) * 2;
 
-        /*if generated parameter value is out of boundaries, it is shifted onto the boundaries*/
+        /* Daca valoarea este inafara limitelor se seteaza ca valoare limita*/
         if (solution[param2change] < lb)
             solution[param2change] = lb;
         if (solution[param2change] > ub)
@@ -139,28 +136,23 @@ void SendEmployedBees()
         ObjValSol = function(solution);
         FitnessSol = CalculateFitness(ObjValSol);
 
-        /*a greedy selection is applied between the current solution i and its mutant*/
         if (FitnessSol > fitness[i]) {
-            /*If the mutant solution is better than the current solution i, replace the solution with the mutant and reset the trial counter of solution i*/
+            /* Daca solutia derivata este mai buna decat cea curenta, noua solutie devine cea derivata si reseteaza counter-ul de imbunatatire*/
             trial[i] = 0;
             for (j = 0; j < D; j++)
                 Foods[i][j] = solution[j];
             f[i] = ObjValSol;
             fitness[i] = FitnessSol;
         }
-        else { /*if the solution i can not be improved, increase its trial counter*/
+        else {
+            /* Daca solutia nu poate fi imbunatatita, creste counter-ul de imbunatatire*/
             trial[i] = trial[i] + 1;
         }
     }
-
-    /*end of employed bee phase*/
 }
 
-/* A food source is chosen with the probability which is proportioal to its quality*/
-/*Different schemes can be used to calculate the probability values*/
-/*For example prob(i)=fitness(i)/sum(fitness)*/
-/*or in a way used in the metot below prob(i)=a*fitness(i)/max(fitness)+b*/
-/*probability values are calculated by using fitness values and normalized by dividing maximum fitness value*/
+/* O sursa de mancare este aleasa cu o probabilitate propotionala cu calitatea ei*/
+/* Probabilitatile sunt calculate folosind valoarea de fitness si normalizata prin impartirea acesteia la valoarea maxima a fitness-ului*/
 void CalculateProbabilities()
 {
     int i;
@@ -181,23 +173,23 @@ void SendOnlookerBees()
     int i, j, t;
     i = 0;
     t = 0;
-    /*onlooker Bee Phase*/
+    /* Etapa albinelor cautatoare*/
     while (t < FoodNumber) {
 
         r = ((double)rand() / ((double)(RAND_MAX) + (double)(1)));
-        if (r < prob[i]) /*choose a food source depending on its probability to be chosen*/
+        if (r < prob[i]) /* Alege o sursa de mancare in functie de probabilitatea ei de a fi aleasa*/
         {
             t++;
 
-            /*The parameter to be changed is determined randomly*/
+            /* Parametrul care trebuie schimbat este ales aleator*/
             r = ((double)rand() / ((double)(RAND_MAX) + (double)(1)));
             param2change = (int)(r * D);
 
-            /*A randomly chosen solution is used in producing a mutant solution of the solution i*/
+            /* O solutie aleasa random creaza o solutie derivata a solutiei i*/
             r = ((double)rand() / ((double)(RAND_MAX) + (double)(1)));
             neighbour = (int)(r * FoodNumber);
 
-            /*Randomly selected solution must be different from the solution i*/
+            /* Solutia aleasa random trebuie sa fie diferita de i*/
             while (neighbour == i) {
                 r = ((double)rand() / ((double)(RAND_MAX) + (double)(1)));
                 neighbour = (int)(r * FoodNumber);
@@ -205,11 +197,11 @@ void SendOnlookerBees()
             for (j = 0; j < D; j++)
                 solution[j] = Foods[i][j];
 
-            /*v_{ij}=x_{ij}+\phi_{ij}*(x_{kj}-x_{ij}) */
+            /* v_{ij}=x_{ij}+\phi_{ij}*(x_{kj}-x_{ij})*/
             r = ((double)rand() / ((double)(RAND_MAX) + (double)(1)));
             solution[param2change] = Foods[i][param2change] + (Foods[i][param2change] - Foods[neighbour][param2change]) * (r - 0.5) * 2;
 
-            /*if generated parameter value is out of boundaries, it is shifted onto the boundaries*/
+            /* Daca valoarea este inafara limitelor se seteaza ca valoare limita*/
             if (solution[param2change] < lb)
                 solution[param2change] = lb;
             if (solution[param2change] > ub)
@@ -219,14 +211,15 @@ void SendOnlookerBees()
 
             /*a greedy selection is applied between the current solution i and its mutant*/
             if (FitnessSol > fitness[i]) {
-                /*If the mutant solution is better than the current solution i, replace the solution with the mutant and reset the trial counter of solution i*/
+                /* Daca solutia derivata este mai buna decat cea curenta, noua solutie devine cea derivata si reseteaza counter-ul de imbunatatire*/
                 trial[i] = 0;
                 for (j = 0; j < D; j++)
                     Foods[i][j] = solution[j];
                 f[i] = ObjValSol;
                 fitness[i] = FitnessSol;
             }
-            else { /*if the solution i can not be improved, increase its trial counter*/
+            else {
+                /* Daca solutia nu poate fi imbunatatita, creste counter-ul de imbunatatire*/
                 trial[i] = trial[i] + 1;
             }
         }
@@ -234,11 +227,9 @@ void SendOnlookerBees()
         if (i == FoodNumber)
             i = 0;
     }
-
-    /*end of onlooker bee phase     */
 }
 
-/*determine the food sources whose trial counter exceeds the "limit" value. In Basic ABC, only one scout is allowed to occur in each cycle*/
+/* Detecteaza sursele pentru care counter-ul de imbunatatire depaseste limita si o abandoneaza*/
 void SendScoutBees()
 {
     int maxtrialindex, i;
@@ -252,7 +243,6 @@ void SendScoutBees()
     }
 }
 
-/*Main program of the ABC algorithm*/
 int main()
 {
     int iter, run, j;
@@ -261,7 +251,6 @@ int main()
     srand(time(NULL));
 
     for (run = 0; run < runtime; run++) {
-
         initial();
         MemorizeBestSource();
         for (iter = 0; iter < maxCycle; iter++) {
@@ -278,20 +267,9 @@ int main()
         GlobalMins[run] = GlobalMin;
         mean = mean + GlobalMin;
     }
+
     mean = mean / runtime;
-
     printf("Means of %d runs: %e\n", runtime, mean);
-
-
-
-
-    for (int i = 0 ; i < FoodNumber ; i++) {
-        for (int j = 0 ; j < D ; j++)
-            std::cout<<Foods[i][j]<<" ";
-        std::cout<<std::endl;
-    }
-
-
 }
 
 double Rosenbrock(double sol[D]) {
@@ -336,15 +314,12 @@ double Ackley(double sol[D]) {
     return top;
 }
 
-/* Not working*/
+/* Nu merge*/
 double Schwefel(double sol[D]) {
     int j;
     double top = 0;
     for (j = 0 ; j < D ; j++) {
-        // std::cout<<j<<std::endl;
         top = top - sol[j] * sin(sqrt(fabs(sol[j])));
     }
-    std::cout<<top + alpha * D<<std::endl;
     return top + alpha * D;
-
 }
