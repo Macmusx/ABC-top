@@ -63,7 +63,7 @@ void PSO(int numofiterations, float c1, float c2,
 
     for(int t = 0; t < 1000; t++)
     {
-        w = 0.9 - 0.7 * (float) (t / numofiterations);
+        w = 0.9 - 0.7 * t / numofiterations;
 
         for(int i = 0; i < numofparticles; i++)
         {
