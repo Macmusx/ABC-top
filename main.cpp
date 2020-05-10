@@ -4,6 +4,11 @@
 #include <time.h>
 #include <iostream>
 
+/* Constants*/
+#define e 2.718281828459045
+#define pi 3.141592653589793
+#define alpha 418.982887
+
 /* Control Parameters of ABC algorithm*/
 #define NP 40 /* The number of colony size (employed bees + onlooker bees)*/
 #define FoodNumber NP / 2 /*The number of food sources equals the half of the colony size*/
@@ -19,7 +24,7 @@
 
 double Foods[FoodNumber][D]; /*Foods is the population of food sources. Each row of Foods matrix is a vector holding D parameters to be optimized. The number of rows of Foods matrix equals to the FoodNumber*/
 double f[FoodNumber]; /*f is a vector holding objective function values associated with food sources */
-double fitness[FoodNumber]; /*fitness is a vector holding fitness (quality) values associated with food sources*/
+double fitness[FoodNumber]; /*fitness is a vector holding fitness values associated with food sources*/
 double trial[FoodNumber]; /*trial is a vector holding trial numbers through which solutions can not be improved*/
 double prob[FoodNumber]; /*prob is a vector holding probabilities of food sources (solutions) to be chosen*/
 double solution[D]; /*New solution (neighbour) produced by v_{ij}=x_{ij}+\phi_{ij}*(x_{kj}-x_{ij}) j is a randomly chosen parameter and k is a randomlu chosen solution different from i*/
@@ -39,9 +44,11 @@ typedef double (*FunctionCallback)(double sol[D]);
 double Rosenbrock(double sol[D]);
 double Griewank(double sol[D]);
 double Rastrigin(double sol[D]);
+double Ackley(double sol[D]);
+double Schwefel(double sol[D]);
 
 /*Write your own objective function name instead of sphere*/
-FunctionCallback function = &Griewank;
+FunctionCallback function = &Schwefel;
 
 /*Fitness function*/
 double CalculateFitness(double fun)
@@ -120,7 +127,7 @@ void SendEmployedBees()
             solution[j] = Foods[i][j];
         }
 
-        /*v_{ij}=x_{ij}+\phi_{ij}*(x_{kj}-x_{ij}) */
+        /*v_{ij}=x_{ij}+\phi_{ij}*(x_{ij}-x_{kj}) */
         r = ((double)rand() / ((double)(RAND_MAX) + (double)(1)));
         solution[param2change] = Foods[i][param2change] + (Foods[i][param2change] - Foods[neighbour][param2change]) * (r - 0.5) * 2;
 
@@ -171,7 +178,6 @@ void CalculateProbabilities()
 
 void SendOnlookerBees()
 {
-
     int i, j, t;
     i = 0;
     t = 0;
@@ -223,11 +229,11 @@ void SendOnlookerBees()
             else { /*if the solution i can not be improved, increase its trial counter*/
                 trial[i] = trial[i] + 1;
             }
-        } /*if */
+        }
         i++;
         if (i == FoodNumber)
             i = 0;
-    } /*while*/
+    }
 
     /*end of onlooker bee phase     */
 }
@@ -273,11 +279,22 @@ int main()
         mean = mean + GlobalMin;
     }
     mean = mean / runtime;
+
     printf("Means of %d runs: %e\n", runtime, mean);
+
+
+
+
+    for (int i = 0 ; i < FoodNumber ; i++) {
+        for (int j = 0 ; j < D ; j++)
+            std::cout<<Foods[i][j]<<" ";
+        std::cout<<std::endl;
+    }
+
+
 }
 
-double Rosenbrock(double sol[D])
-{
+double Rosenbrock(double sol[D]) {
     int j;
     double top = 0;
     for (j = 0; j < D - 1; j++) {
@@ -286,8 +303,7 @@ double Rosenbrock(double sol[D])
     return top;
 }
 
-double Griewank(double sol[D])
-{
+double Griewank(double sol[D]) {
     int j;
     double top1, top2, top;
     top = 0;
@@ -301,8 +317,7 @@ double Griewank(double sol[D])
     return top;
 }
 
-double Rastrigin(double sol[D])
-{
+double Rastrigin(double sol[D]) {
     int j;
     double top = 0;
 
@@ -310,4 +325,26 @@ double Rastrigin(double sol[D])
         top = top + (pow(sol[j], (double)2) - 10 * cos(2 * M_PI * sol[j]) + 10);
     }
     return top;
+}
+
+double Ackley(double sol[D]) {
+    int j;
+    double top = 0;
+    for (j = 0 ; j < D ; j++) {
+        top = top + -20.0*exp(-0.2*sqrt(pow(sol[j], 2) / D )) - exp(cos(2 * pi * sol[D]) / D ) + 20 + e;
+    }
+    return top;
+}
+
+/* Not working*/
+double Schwefel(double sol[D]) {
+    int j;
+    double top = 0;
+    for (j = 0 ; j < D ; j++) {
+        // std::cout<<j<<std::endl;
+        top = top - sol[j] * sin(sqrt(fabs(sol[j])));
+    }
+    std::cout<<top + alpha * D<<std::endl;
+    return top + alpha * D;
+
 }
