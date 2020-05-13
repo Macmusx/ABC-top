@@ -16,7 +16,7 @@ double Rosenbrock(double sol[D]);
 double Griewank(double sol[D]);
 double Rastrigin(double sol[D]);
 double Ackley(double sol[D]);
-double Schwefel(double sol[D]);
+double Schwefel(double sol[D]); /* nu merge */
 
 typedef double (*FunctionCallback)(double sol[D]);
 
@@ -123,7 +123,7 @@ double Ackley(double sol[D]) {
     return top;
 }
 
-/* Nu merge*/
+/* Nu merge */
 double Schwefel(double sol[D]) {
     int j;
     double top = 0;
